@@ -1,0 +1,14 @@
+本文记录不懂的汇编指令
+- `int $10;` 发送中断
+- `lds reg,mem;` 将mem指向的地址 高位放在 ds中，低位放在reg中
+- `movsb;` move byte ds:si to  es:di
+- `jl` jmp less
+- `cli` disable interupt
+- `sti` enable interupt
+- `cld` si or di 递加
+- `std` si or di 递减
+- `jz` jum if zero zeroflag = 1 
+- `cmp op1 op2` zeroflag = 1 when op1 equals to op2
+- `lidt` 加载中断描述符寄存器
+- `lgdt` 加载全局描述符寄存器,这个段主要记录了gdt
+-  `stosl` move eax to es:edi

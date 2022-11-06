@@ -42,6 +42,7 @@ make bochs-debug
 ```
 启动后即可点击continue进行运行，bochs可以单步调试汇编代码
 
+## 调试
 bochs可以在gui界面中查看以下内容
 - 寄存器
 - 物理内存
@@ -51,6 +52,9 @@ bochs可以在gui界面中查看以下内容
 - IDT
 - page Table
 
+同时也可以 通过以下方法进行调试
+- 魔术断点 `chgw %bx, %bx`
+- 手动添加断点，选中一行汇编代码， 按下`F6`即可打上断点
 
 # gdb + qemu
 ## 安装
