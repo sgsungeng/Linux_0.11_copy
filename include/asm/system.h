@@ -12,6 +12,7 @@ __asm__ ("movl %%esp,%%eax\n\t" \ // current infomation
 	"movw %%ax,%%fs\n\t" \
 	"movw %%ax,%%gs" \
 	:::"ax")
+
 #define sti() __asm__ ("sti"::)
 #define cli() __asm__ ("cli"::)
 #define nop() __asm__ ("nop"::)

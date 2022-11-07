@@ -4,9 +4,12 @@
 # 笔记
 1. [debug](./doc/debug.md)
 2. [boot](./doc/boot.md)
+3. [init](./doc/init.md)
 
 # 当前进度
-写 boot过程
+
+写init
+
 # TODO:
 
 1. 编译过程
