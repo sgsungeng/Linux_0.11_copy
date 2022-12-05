@@ -100,7 +100,7 @@ struct task_struct {
 	struct m_inode * pwd;
 	struct m_inode * root;
 	struct m_inode * executable;
-	unsigned long close_on_exec;
+	unsigned long close_on_exec; // file位图 执行时关闭 主要是在do_execve中判断
 	struct file * filp[NR_OPEN];
 /* ldt for this task 0 - zero 1 - cs 2 - ds&ss */
 	struct desc_struct ldt[3];

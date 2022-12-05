@@ -27,9 +27,10 @@
 #define WRITE 1
 #define READA 2		/* read-ahead - don't pause */
 #define WRITEA 3	/* "write-ahead" - silly, but somewhat useful */
+
 void buffer_init(long buffer_end);
 
-#define MAJOR(a) (((unsigned)(a))>>8)
+#define MAJOR(a) (((unsigned)(a))>>8) // high 8 bit
 #define MINOR(a) ((a)&0xff)
 
 #define NAME_LEN 14
@@ -68,22 +69,94 @@ struct buffer_head {
 	char * b_data;			/* pointer to data block (1024 bytes) */
 	unsigned long b_blocknr;	/* block number */
 	unsigned short b_dev;		/* device (0 = free) */
-	unsigned char b_uptodate;
+	unsigned char b_uptodate;    // isValid
 	unsigned char b_dirt;		/* 0-clean,1-dirty */
 	unsigned char b_count;		/* users using this block */
 	unsigned char b_lock;		/* 0 - ok, 1 -locked */
 	struct task_struct * b_wait;
-	struct buffer_head * b_prev;
+	struct buffer_head * b_prev; // hash table lists
 	struct buffer_head * b_next;
-	struct buffer_head * b_prev_free;
+	struct buffer_head * b_prev_free; // free list 
 	struct buffer_head * b_next_free;
 };
+
+// inode in disk
+struct d_inode {
+	unsigned short i_mode;	// rwx
+	unsigned short i_uid;	// user id
+	unsigned long i_size;	// file size
+	unsigned long i_time;	//change time from 1970 .1.1 seonds
+	unsigned char i_gid;	// group id 
+	unsigned char i_nlinks; // link 
+	unsigned short i_zone[9]; // zones
+};
+// inode in memory
+struct m_inode {
+	unsigned short i_mode;
+	unsigned short i_uid;
+	unsigned long i_size;
+	unsigned long i_mtime;
+	unsigned char i_gid;
+	unsigned char i_nlinks;
+	unsigned short i_zone[9];
+	struct task_struct * i_wait;
+	unsigned long i_atime;	// view time
+	unsigned long i_ctime;	// create time
+	unsigned short i_dev;	// dev of inode
+	unsigned short i_num;	// inode block number
+	unsigned short i_count;
+	unsigned char i_lock;
+	unsigned char i_dirt;
+	unsigned char i_pipe;
+	unsigned char i_mount;
+	unsigned char i_seek;
+	unsigned char i_update;
+};
+
 struct file {
-	unsigned short f_mode;
+	unsigned short f_mode; // RW
 	unsigned short f_flags;
 	unsigned short f_count;
 	struct m_inode * f_inode;
 	off_t f_pos;
+};
+
+struct super_block {
+	unsigned short s_ninodes; 	// inodes number
+	unsigned short s_nzones;	// block number
+	unsigned short s_imap_blocks; // bit map blocks of inode
+	unsigned short s_zmap_blocks; // bit map blocks of zone
+	unsigned short s_firstdatazone; // block number of first data zone
+	unsigned short s_log_zone_size; // log(data block/logic number)
+	unsigned long s_max_size;	// max size of file
+	unsigned short s_magic;	//magic number of file system
+/* These are only in memory */
+	struct buffer_head * s_imap[8];
+	struct buffer_head * s_zmap[8];
+	unsigned short s_dev;
+	struct m_inode * s_isup; // 被安装的根节点inode
+	struct m_inode * s_imount; // 被安装到的inode
+	unsigned long s_time;
+	struct task_struct * s_wait;
+	unsigned char s_lock;
+	unsigned char s_rd_only; // readonly
+	unsigned char s_dirt;
+};
+// super in disk
+struct d_super_block { 
+	unsigned short s_ninodes;
+	unsigned short s_nzones;
+	unsigned short s_imap_blocks;
+	unsigned short s_zmap_blocks;
+	unsigned short s_firstdatazone;
+	unsigned short s_log_zone_size;
+	unsigned long s_max_size;
+	unsigned short s_magic;
+};
+
+struct dir_entry {
+	unsigned short inode;
+	char name[NAME_LEN];
 };
 
 extern struct m_inode inode_table[NR_INODE];
@@ -97,10 +170,10 @@ extern int floppy_change(unsigned int nr);
 extern int ticks_to_floppy_on(unsigned int dev);
 extern void floppy_on(unsigned int dev);
 extern void floppy_off(unsigned int dev);
-extern void truncate(struct m_inode * inode);
+extern void truncate(struct m_inode * inode); // remove all zone
 extern void sync_inodes(void);
 extern void wait_on(struct m_inode * inode);
-extern int bmap(struct m_inode * inode,int block);
+extern int bmap(struct m_inode * inode,int block); // get logic number of data block 
 extern int create_block(struct m_inode * inode,int block);
 extern struct m_inode * namei(const char * pathname);
 extern int open_namei(const char * pathname, int flag, int mode,

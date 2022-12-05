@@ -32,7 +32,7 @@
 
 SIG_CHLD	= 17
 
-EAX		= 0x00
+EAX		= 0x00 #statck offset
 EBX		= 0x04
 ECX		= 0x08
 EDX		= 0x0C
@@ -130,6 +130,49 @@ ret_from_sys_call:
 	pop %ds
 	iret
 .align 2
+coprocessor_error:
+	push %ds
+	push %es
+	push %fs
+	pushl %edx
+	pushl %ecx
+	pushl %ebx
+	pushl %eax
+	movl $0x10,%eax
+	mov %ax,%ds
+	mov %ax,%es
+	movl $0x17,%eax
+	mov %ax,%fs
+	pushl $ret_from_sys_call
+	jmp math_error
+
+.align 2
+device_not_available:
+	push %ds
+	push %es
+	push %fs
+	pushl %edx
+	pushl %ecx
+	pushl %ebx
+	pushl %eax
+	movl $0x10,%eax
+	mov %ax,%ds
+	mov %ax,%es
+	movl $0x17,%eax
+	mov %ax,%fs
+	pushl $ret_from_sys_call
+	clts				# clear TS so that we can use math
+	movl %cr0,%eax
+	testl $0x4,%eax			# EM (math emulation bit)
+	je math_state_restore
+	pushl %ebp
+	pushl %esi
+	pushl %edi
+	call math_emulate
+	popl %edi
+	popl %esi
+	popl %ebp
+	ret
 .align 2
 timer_interrupt:
 	push %ds		# save ds,es and put kernel data space
@@ -153,6 +196,16 @@ timer_interrupt:
 	call do_timer		# 'do_timer(long CPL)' does everything from
 	addl $4,%esp		# task switching to accounting ...
 	jmp ret_from_sys_call
+
+.align 2
+sys_execve:
+	lea EIP(%esp),%eax
+	pushl %eax
+	call do_execve
+	addl $4,%esp
+	ret
+
+.align 2
 sys_fork:
 	call find_empty_process
 	testl %eax,%eax
@@ -166,3 +219,69 @@ sys_fork:
 	call copy_process
 	addl $20,%esp
 1:	ret
+
+hd_interrupt:
+	pushl %eax
+	pushl %ecx
+	pushl %edx
+	push %ds
+	push %es
+	push %fs
+	movl $0x10,%eax
+	mov %ax,%ds
+	mov %ax,%es
+	movl $0x17,%eax
+	mov %ax,%fs
+	movb $0x20,%al
+	outb %al,$0xA0		# EOI to interrupt controller #1
+	jmp 1f			# give port chance to breathe
+1:	jmp 1f
+1:	xorl %edx,%edx
+	xchgl do_hd,%edx
+	testl %edx,%edx
+	jne 1f
+	movl $unexpected_hd_interrupt,%edx
+1:	outb %al,$0x20
+	call *%edx		# "interesting" way of handling intr.
+	pop %fs
+	pop %es
+	pop %ds
+	popl %edx
+	popl %ecx
+	popl %eax
+	iret
+
+floppy_interrupt:
+	pushl %eax
+	pushl %ecx
+	pushl %edx
+	push %ds
+	push %es
+	push %fs
+	movl $0x10,%eax
+	mov %ax,%ds
+	mov %ax,%es
+	movl $0x17,%eax
+	mov %ax,%fs
+	movb $0x20,%al
+	outb %al,$0x20		# EOI to interrupt controller #1
+	xorl %eax,%eax
+	xchgl do_floppy,%eax
+	testl %eax,%eax
+	jne 1f
+	movl $unexpected_floppy_interrupt,%eax
+1:	call *%eax		# "interesting" way of handling intr.
+	pop %fs
+	pop %es
+	pop %ds
+	popl %edx
+	popl %ecx
+	popl %eax
+	iret
+
+parallel_interrupt:
+	pushl %eax
+	movb $0x20,%al
+	outb %al,$0x20
+	popl %eax
+	iret

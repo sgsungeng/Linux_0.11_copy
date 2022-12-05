@@ -38,8 +38,6 @@ mem_init(main_memory_start,memory_end);
 - 初始化中断
     ```c++
     trap_init();
-
-
     ```
 - 初始化字符设备
     ```c++
@@ -54,8 +52,40 @@ mem_init(main_memory_start,memory_end);
 	tty_init();
     ```
 - 初始化系统时间
+	
+	这个是最简单的初始化，主要是从主板上读取时间并转换为系统时间
     ```c++
 	time_init();
+
+	#define CMOS_READ(addr) ({ \
+	outb_p(0x80|addr,0x70); \
+	inb_p(0x71); \
+	})
+
+	#define BCD_TO_BIN(val) ((val)=((val)&15) + ((val)>>4)*10)
+
+	static void time_init(void)
+	{
+		struct tm time;
+
+		do {
+			time.tm_sec = CMOS_READ(0);
+			time.tm_min = CMOS_READ(2);
+			time.tm_hour = CMOS_READ(4);
+			time.tm_mday = CMOS_READ(7);
+			time.tm_mon = CMOS_READ(8);
+			time.tm_year = CMOS_READ(9);
+		} while (time.tm_sec != CMOS_READ(0));
+		BCD_TO_BIN(time.tm_sec);
+		BCD_TO_BIN(time.tm_min);
+		BCD_TO_BIN(time.tm_hour);
+		BCD_TO_BIN(time.tm_mday);
+		BCD_TO_BIN(time.tm_mon);
+		BCD_TO_BIN(time.tm_year);
+		time.tm_mon--;
+		startup_time = kernel_mktime(&time);
+	}
+	
     ```
 - 初始化调度系统
     ```c++
@@ -110,7 +140,10 @@ mem_init(main_memory_start,memory_end);
     for(;;) pause();
     ```
 # 1号进程
-
+1号进程主要做了三件事，
+- 挂载根文件系统
+- 执行rc
+- 维护了我们使用的shell
 ```c
 ROOT_DEV = ORIG_ROOT_DEV; 
 // #define ORIG_ROOT_DEV (*(unsigned short *)0x901FC)
@@ -136,10 +169,10 @@ void init(void)
 		NR_BUFFERS*BLOCK_SIZE);
 	printf("Free mem: %d bytes\n\r",memory_end-main_memory_start);
 	if (!(pid=fork())) {
-		close(0);
+		close(0); // 2号子进程执行rc
 		if (open("/etc/rc",O_RDONLY,0))
 			_exit(1);
-		execve("/bin/sh",argv_rc,envp_rc);
+		execve("/bin/sh",argv_rc,envp_rc); 
 		_exit(2);
 	}
 	if (pid>0)
@@ -150,13 +183,13 @@ void init(void)
 			printf("Fork failed in init\r\n");
 			continue;
 		}
-		if (!pid) {
+		if (!pid) { // 4号进程 TODO:为啥是两个进程呢，猜测是execve重新创建了一个进程来执行
 			close(0);close(1);close(2);
 			setsid();
 			(void) open("/dev/tty0",O_RDWR,0);
 			(void) dup(0);
 			(void) dup(0);
-			_exit(execve("/bin/sh",argv,envp));
+			_exit(execve("/bin/sh",argv,envp)); // 我们使用的shell
 		}
 		while (1)
 			if (pid == wait(&i))

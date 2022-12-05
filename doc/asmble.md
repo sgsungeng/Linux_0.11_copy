@@ -11,4 +11,8 @@
 - `cmp op1 op2` zeroflag = 1 when op1 equals to op2
 - `lidt` 加载中断描述符寄存器
 - `lgdt` 加载全局描述符寄存器,这个段主要记录了gdt
--  `stosl` move eax to es:edi
+- `stosl` move eax to es:edi
+- `clts` 清除TS标志，并且保存协处理器的上下文。
+- `lea`
+- `lodsl` 加载一个双字(即4个字节)的数据到eax寄存器
+- 

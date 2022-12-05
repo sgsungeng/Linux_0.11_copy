@@ -137,7 +137,7 @@ void main(void)		/* This really IS void, no error here. */
 	floppy_init();
 	sti();
 	move_to_user_mode();
-	BMB;
+	BMB();
 	if (!fork()) {		/* we count on this going ok */
 		init();
 	}
@@ -159,6 +159,7 @@ static int printf(const char *fmt, ...)
 	va_start(args, fmt);
 	write(1,printbuf,i=vsprintf(printbuf, fmt, args));
 	va_end(args);
+	
 	return i;
 }
 
@@ -171,7 +172,7 @@ static char * envp[] = { "HOME=/usr/root", NULL };
 void init(void)
 {
 	int pid,i;
-
+	// show_task(1, current);
 	setup((void *) &drive_info);
 	(void) open("/dev/tty0",O_RDWR,0);
 	(void) dup(0);
@@ -189,12 +190,15 @@ void init(void)
 	if (pid>0)
 		while (pid != wait(&i))
 			/* nothing */;
+	printf("the first shell is died!!!!\n");
+
 	while (1) {
 		if ((pid=fork())<0) {
 			printf("Fork failed in init\r\n");
 			continue;
 		}
 		if (!pid) {
+
 			close(0);close(1);close(2);
 			setsid();
 			(void) open("/dev/tty0",O_RDWR,0);

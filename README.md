@@ -5,6 +5,7 @@
 1. [debug](./doc/debug.md)
 2. [boot](./doc/boot.md)
 3. [init](./doc/init.md)
+4. [print](./doc/print.md)
 
 # 当前进度
 
