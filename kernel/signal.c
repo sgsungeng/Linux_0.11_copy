@@ -12,12 +12,12 @@
 
 void do_exit(int error_code);
 
-int sys_sgetmask()
+int sys_sgetmask() //获取屏蔽信号集
 {
 	return current->blocked;
 }
 
-int sys_ssetmask(int newmask)
+int sys_ssetmask(int newmask)  //设置屏蔽信号集
 {
 	int old=current->blocked;
 
@@ -25,7 +25,7 @@ int sys_ssetmask(int newmask)
 	return old;
 }
 
-static inline void save_old(char * from,char * to)
+static inline void save_old(char * from,char * to) // 复制 sigaction 结构体
 {
 	int i;
 
@@ -37,7 +37,7 @@ static inline void save_old(char * from,char * to)
 	}
 }
 
-static inline void get_new(char * from,char * to)
+static inline void get_new(char * from,char * to)// 拷贝到to
 {
 	int i;
 
@@ -45,11 +45,11 @@ static inline void get_new(char * from,char * to)
 		*(to++) = get_fs_byte(from++); // fs is user data segment
 }
 
-int sys_signal(int signum, long handler, long restorer)
+int sys_signal(int signum, long handler, long restorer) // 设置信号对应的操作，返回原操作
 {
 	struct sigaction tmp;
 
-	if (signum<1 || signum>32 || signum==SIGKILL)
+	if (signum<1 || signum>32 || signum==SIGKILL)// kill 不允许设置
 		return -1;
 	tmp.sa_handler = (void (*)(int)) handler;
 	tmp.sa_mask = 0; // do not block any signal in signal action
@@ -59,12 +59,12 @@ int sys_signal(int signum, long handler, long restorer)
 	current->sigaction[signum-1] = tmp;
 	return handler;
 }
-int sys_sigaction(int signum, const struct sigaction * action,
+int sys_sigaction(int signum, const struct sigaction * action,// 将老的保持在oldaction中，设置为新的
 	struct sigaction * oldaction)
 {
 	struct sigaction tmp;
 
-	if (signum<1 || signum>32 || signum==SIGKILL)
+	if (signum<1 || signum>32 || signum==SIGKILL)// 
 		return -1;
 	tmp = current->sigaction[signum-1];
 	get_new((char *) action,
@@ -81,7 +81,7 @@ int sys_sigaction(int signum, const struct sigaction * action,
 void do_signal(long signr,long eax, long ebx, long ecx, long edx,
 	long fs, long es, long ds,
 	long eip, long cs, long eflags,
-	unsigned long * esp, long ss)
+	unsigned long * esp, long ss) // 做对应的操作
 {
 	unsigned long sa_handler;
 	long old_eip=eip;
@@ -92,17 +92,17 @@ void do_signal(long signr,long eax, long ebx, long ecx, long edx,
 	sa_handler = (unsigned long) sa->sa_handler;
 	if (sa_handler==1)
 		return;
-	if (!sa_handler) {
+	if (!sa_handler) { // 没有对应的操作函数则 进行默认操作
 		if (signr==SIGCHLD)
 			return;
 		else
 			do_exit(1<<(signr-1));
 	}
 	if (sa->sa_flags & SA_ONESHOT)
-		sa->sa_handler = NULL;
-	*(&eip) = sa_handler;
+		sa->sa_handler = NULL; // 如果只是需要操作一次，就清空
+	*(&eip) = sa_handler; // 将eip设置为sa_handler
 	longs = (sa->sa_flags & SA_NOMASK)?7:8;
-	*(&esp) -= longs;
+	*(&esp) -= longs; // 设置栈顶
 	verify_area(esp,longs*4);
 	tmp_esp=esp;
 	put_fs_long((long) sa->sa_restorer,tmp_esp++);

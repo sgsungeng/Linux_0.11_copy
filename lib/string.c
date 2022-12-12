@@ -13,7 +13,7 @@
 #define static
 #define __LIBRARY__
 #include <string.h>
-inline char * strcpy(char * dest,const char *src)
+inline char * strcpy(char * dest,const char *src) // 这个文件用c语言实现过，不看
 {
         __asm__("cld\n"
                 "1:\tlodsb\n\t"

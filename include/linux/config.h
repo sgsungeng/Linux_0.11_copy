@@ -13,7 +13,7 @@
  * KBD_GR for German keyboards
  * KBD_FR for Frech keyboard
  */
-#define KBD_US
+#define KBD_US // 键盘
 /*#define KBD_GR */
 /*#define KBD_FR */
 /*#define KBD_FINNISH */
@@ -31,7 +31,7 @@
  * In case of two harddisks, the info should be sepatated by
  * commas:
  *
- * #define HD_TYPE { h,s,c,wpcom,lz,ctl },{ h,s,c,wpcom,lz,ctl }
+ * #define HD_TYPE { h,s,c,wpcom,lz,ctl },{ h,s,c,wpcom,lz,ctl } 设置为空让BIOS传递有哪些类型 ，在hd.c中使用
  */
 /*
  This is an example, two drives, first is type 2, second is type 3:

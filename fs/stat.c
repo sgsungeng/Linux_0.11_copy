@@ -12,6 +12,8 @@
 #include <linux/kernel.h>
 #include <asm/segment.h>
 
+
+// 拷贝动作
 static void cp_stat(struct m_inode * inode, struct stat * statbuf)
 {
 	struct stat tmp;

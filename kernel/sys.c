@@ -12,7 +12,7 @@
 #include <asm/segment.h>
 #include <sys/times.h>
 #include <sys/utsname.h>
-
+// 未实现
 int sys_ftime()
 {
 	return -ENOSYS;
@@ -47,7 +47,7 @@ int sys_prof()
 {
 	return -ENOSYS;
 }
-
+// 设置 rgid egid
 int sys_setregid(int rgid, int egid)
 {
 	if (rgid>0) {
@@ -98,7 +98,7 @@ int sys_ulimit()
 {
 	return -ENOSYS;
 }
-
+// 获取的时间 
 int sys_time(long * tloc)
 {
 	int i;
@@ -115,7 +115,7 @@ int sys_time(long * tloc)
  * Unprivileged users may change the real user id to the effective uid
  * or vice versa.
  */
-int sys_setreuid(int ruid, int euid)
+int sys_setreuid(int ruid, int euid) // 设置ruid euid
 {
 	int old_ruid = current->uid;
 	
@@ -140,12 +140,12 @@ int sys_setreuid(int ruid, int euid)
 	return 0;
 }
 
-int sys_setuid(int uid)
+int sys_setuid(int uid) // 设置uid
 {
 	return(sys_setreuid(uid, uid));
 }
 
-int sys_stime(long * tptr)
+int sys_stime(long * tptr) // 设置时间
 {
 	if (!suser())
 		return -EPERM;
@@ -153,7 +153,7 @@ int sys_stime(long * tptr)
 	return 0;
 }
 
-int sys_times(struct tms * tbuf)
+int sys_times(struct tms * tbuf)// 获得时间，返回jiffies
 {
 	if (tbuf) {
 		verify_area(tbuf,sizeof *tbuf);
@@ -178,7 +178,7 @@ int sys_brk(unsigned long end_data_seg)
  * I just haven't get the stomach for it. I also don't fully
  * understand sessions/pgrp etc. Let somebody who does explain it.
  */
-int sys_setpgid(int pid, int pgid)
+int sys_setpgid(int pid, int pgid) // 设置pgid
 {
 	int i;
 
@@ -198,7 +198,7 @@ int sys_setpgid(int pid, int pgid)
 	return -ESRCH;
 }
 
-int sys_getpgrp(void)
+int sys_getpgrp(void) //返回pgrp
 {
 	return current->pgrp;
 }
@@ -213,7 +213,7 @@ int sys_setsid(void)
 	return current->pgrp;
 }
 
-int sys_uname(struct utsname * name)
+int sys_uname(struct utsname * name) // 返回系统信息
 {
 	static struct utsname thisname = {
 		"linux .0","nodename","release ","version ","machine "
@@ -227,7 +227,7 @@ int sys_uname(struct utsname * name)
 	return 0;
 }
 
-int sys_umask(int mask)
+int sys_umask(int mask) // 设置umask 返回old umask
 {
 	int old = current->umask;
 

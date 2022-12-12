@@ -2,11 +2,11 @@
 #define _UNISTD_H
 
 /* ok, this may be a joke, but I'm working on it */
-#define _POSIX_VERSION 198808L
+#define _POSIX_VERSION 198808L // posix 标准版本
 
 #define _POSIX_CHOWN_RESTRICTED	/* only root can do a chown (I think..) */
-#define _POSIX_NO_TRUNC		/* no pathname truncation (but see in kernel) */
-#define _POSIX_VDISABLE '\0'	/* character to disable things like ^C */
+#define _POSIX_NO_TRUNC		/* no pathname truncation (but see in kernel) */ // 长路径名直接返回错误
+#define _POSIX_VDISABLE '\0'	/* character to disable things like ^C */ // 没有使用
 /*#define _POSIX_SAVED_IDS */	/* we'll get to this yet */
 /*#define _POSIX_JOB_CONTROL */	/* we aren't there quite yet. Soon hopefully */
 
@@ -29,8 +29,9 @@
 #define SEEK_CUR	1
 #define SEEK_END	2
 
-/* _SC stands for System Configuration. We don't use them much */
-#define _SC_ARG_MAX		1
+/* _SC stands for System Configuration. We don't use them much */ 
+// 没有用到
+#define _SC_ARG_MAX		1 
 #define _SC_CHILD_MAX		2
 #define _SC_CLOCKS_PER_SEC	3
 #define _SC_NGROUPS_MAX		4
@@ -56,7 +57,7 @@
 #include <utime.h>
 
 #ifdef __LIBRARY__
-
+// 系统调用号
 #define __NR_setup	0	/* used only by init, to get system going */
 #define __NR_exit	1
 #define __NR_fork	2
@@ -131,7 +132,7 @@
 #define __NR_setregid	71
 #define __NR_iam		72
 #define __NR_whoami		73
-
+// 系统调用宏定义
 #define _syscall0(type,name) \
   type name(void) \
 { \

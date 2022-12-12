@@ -1,6 +1,6 @@
 #ifndef _FCNTL_H
 #define _FCNTL_H
-
+// 文件操作
 #include <sys/types.h>
 
 /* open/fcntl - NOCTTY, NDELAY isn't implemented yet */

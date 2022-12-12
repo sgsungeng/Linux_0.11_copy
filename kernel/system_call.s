@@ -32,7 +32,7 @@
 
 SIG_CHLD	= 17
 
-EAX		= 0x00 #statck offset
+EAX		= 0x00 #栈中参数偏移
 EBX		= 0x04
 ECX		= 0x08
 EDX		= 0x0C
@@ -45,6 +45,7 @@ EFLAGS		= 0x24
 OLDESP		= 0x28
 OLDSS		= 0x2C
 
+# taks struct 偏移
 state	= 0		# these are offsets into the task-struct. eqaul to task.state
 counter	= 4
 priority = 8
@@ -52,6 +53,7 @@ signal	= 12
 sigaction = 16		# MUST be 16 (=len of sigaction)
 blocked = (33*16)
 
+# 信号偏移
 # offsets within sigaction
 sa_handler = 0
 sa_mask = 4
@@ -68,11 +70,11 @@ nr_system_calls = 74 # system call counter
 .globl hd_interrupt,floppy_interrupt,parallel_interrupt
 .globl device_not_available, coprocessor_error
 .align 2
-bad_sys_call: # error call number
+bad_sys_call: # 错误的系统调用回调用这个，error call number
 	movl $-1,%eax
 	iret
 .align 2
-reschedule:
+reschedule: # 重新调度
 	pushl $ret_from_sys_call
 	jmp schedule
 .align 2
@@ -130,7 +132,7 @@ ret_from_sys_call:
 	pop %ds
 	iret
 .align 2
-coprocessor_error:
+coprocessor_error: # 协处理处理器错误
 	push %ds
 	push %es
 	push %fs

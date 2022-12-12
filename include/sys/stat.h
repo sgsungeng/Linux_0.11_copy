@@ -4,19 +4,19 @@
 #include <sys/types.h>
 
 struct stat {
-	dev_t	st_dev;
-	ino_t	st_ino;
-	umode_t	st_mode;
+	dev_t	st_dev; // 含有文件的设备号
+	ino_t	st_ino; // 文件inode号
+	umode_t	st_mode; // 文件魔数
 	nlink_t	st_nlink;
 	uid_t	st_uid;
 	gid_t	st_gid;
-	dev_t	st_rdev;
+	dev_t	st_rdev;// 设备号，如果该文件是特殊文件
 	off_t	st_size;
 	time_t	st_atime;
 	time_t	st_mtime;
 	time_t	st_ctime;
 };
-
+// stmode值
 #define S_IFMT  00170000
 #define S_IFREG  0100000
 #define S_IFBLK  0060000
@@ -32,18 +32,18 @@ struct stat {
 #define S_ISCHR(m)	(((m) & S_IFMT) == S_IFCHR)
 #define S_ISBLK(m)	(((m) & S_IFMT) == S_IFBLK)
 #define S_ISFIFO(m)	(((m) & S_IFMT) == S_IFIFO)
-
-#define S_IRWXU 00700
+// 文件访问权限
+#define S_IRWXU 00700 //onwer
 #define S_IRUSR 00400
 #define S_IWUSR 00200
 #define S_IXUSR 00100
 
-#define S_IRWXG 00070
+#define S_IRWXG 00070 // group
 #define S_IRGRP 00040
 #define S_IWGRP 00020
 #define S_IXGRP 00010
 
-#define S_IRWXO 00007
+#define S_IRWXO 00007 // other
 #define S_IROTH 00004
 #define S_IWOTH 00002
 #define S_IXOTH 00001

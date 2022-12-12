@@ -3,7 +3,7 @@
  *
  *  (C) 1991  Linus Torvalds
  */
-
+// TODO:
 /*
  * super.c contains code to handle the super-block tables.
  */
@@ -52,6 +52,8 @@ static void wait_on_super(struct super_block * sb)
 		sleep_on(&(sb->s_wait));
 	sti();
 }
+
+// 查找super
 struct super_block * get_super(int dev)
 {
 	struct super_block * s;
@@ -64,12 +66,12 @@ struct super_block * get_super(int dev)
 			wait_on_super(s);
 			if (s->s_dev == dev)
 				return s;
-			s = 0+super_block; // TODO how can go to there ? release ?
+			s = 0+super_block;// 重新开始查找，不会走到
 		} else
 			s++;
 	return NULL;
 }
-
+// 释放super
 void put_super(int dev)
 {
 	struct super_block * sb;
@@ -89,13 +91,13 @@ void put_super(int dev)
 	lock_super(sb);
 	sb->s_dev = 0;
 	for(i=0;i<I_MAP_SLOTS;i++)
-		brelse(sb->s_imap[i]);
+		brelse(sb->s_imap[i]);  // 释放占用的buffer head
 	for(i=0;i<Z_MAP_SLOTS;i++)
 		brelse(sb->s_zmap[i]);
 	free_super(sb);
 	return;
 }
-
+// 读取super
 static struct super_block * read_super(int dev)
 {
 	struct super_block * s;
@@ -110,7 +112,7 @@ static struct super_block * read_super(int dev)
 	for (s = 0+super_block ;; s++) {
 		if (s >= NR_SUPER+super_block)
 			return NULL;
-		if (!s->s_dev)
+		if (!s->s_dev) // 找一个空的super_block
 			break;
 	}
 	s->s_dev = dev;
@@ -120,13 +122,13 @@ static struct super_block * read_super(int dev)
 	s->s_rd_only = 0;
 	s->s_dirt = 0;
 	lock_super(s);
-	if (!(bh = bread(dev,1))) {
+	if (!(bh = bread(dev,1))) { // 读取第一个块
 		s->s_dev=0;
 		free_super(s);
 		return NULL;
 	}
 	*((struct d_super_block *) s) =
-		*((struct d_super_block *) bh->b_data);
+		*((struct d_super_block *) bh->b_data); // 从缓冲区读入内核
 	brelse(bh);
 	if (s->s_magic != SUPER_MAGIC) {
 		s->s_dev = 0;
@@ -139,12 +141,12 @@ static struct super_block * read_super(int dev)
 		s->s_zmap[i] = NULL;
 	block=2;
 	for (i=0 ; i < s->s_imap_blocks ; i++)
-		if ((s->s_imap[i]=bread(dev,block)))
+		if ((s->s_imap[i]=bread(dev,block))) // 读取i节点位图
 			block++;
 		else
 			break;
 	for (i=0 ; i < s->s_zmap_blocks ; i++)
-		if ((s->s_zmap[i]=bread(dev,block)))
+		if ((s->s_zmap[i]=bread(dev,block))) // 读取block节点位图
 			block++;
 		else
 			break;
@@ -157,12 +159,12 @@ static struct super_block * read_super(int dev)
 		free_super(s);
 		return NULL;
 	}
-	s->s_imap[0]->b_data[0] |= 1;
+	s->s_imap[0]->b_data[0] |= 1; // 第一个不能用
 	s->s_zmap[0]->b_data[0] |= 1;
 	free_super(s);
 	return s;
 }
-
+// 卸载
 int sys_umount(char * dev_name)
 {
 	struct m_inode * inode;
@@ -184,28 +186,28 @@ int sys_umount(char * dev_name)
 	if (!sb->s_imount->i_mount)
 		printk("Mounted inode has i_mount=0\n");
 	for (inode=inode_table+0 ; inode<inode_table+NR_INODE ; inode++)
-		if (inode->i_dev==dev && inode->i_count)
+		if (inode->i_dev==dev && inode->i_count) // 有人使用
 				return -EBUSY;
-	sb->s_imount->i_mount=0;
+	sb->s_imount->i_mount=0; // 将superblock的挂载点的挂载标志给清理了
 	iput(sb->s_imount);
-	sb->s_imount = NULL;
+	sb->s_imount = NULL;// 将superblock的挂载点给清理了
 	iput(sb->s_isup);
 	sb->s_isup = NULL;
 	put_super(dev);
 	sync_dev(dev);
 	return 0;
 }
-
+// 将dev挂载到dir
 int sys_mount(char * dev_name, char * dir_name, int rw_flag)
 {
 	struct m_inode * dev_i, * dir_i;
 	struct super_block * sb;
 	int dev;
 
-	if (!(dev_i=namei(dev_name)))
+	if (!(dev_i=namei(dev_name))) // 从/dev/读取到出来
 		return -ENOENT;
 	dev = dev_i->i_zone[0];
-	if (!S_ISBLK(dev_i->i_mode)) {
+	if (!S_ISBLK(dev_i->i_mode)) { // 必须是块设备
 		iput(dev_i);
 		return -EPERM;
 	}
@@ -220,7 +222,7 @@ int sys_mount(char * dev_name, char * dir_name, int rw_flag)
 		iput(dir_i);
 		return -EPERM;
 	}
-	if (!(sb=read_super(dev))) {
+	if (!(sb=read_super(dev))) { // 读取出来
 		iput(dir_i);
 		return -EBUSY;
 	}
@@ -232,12 +234,12 @@ int sys_mount(char * dev_name, char * dir_name, int rw_flag)
 		iput(dir_i);
 		return -EPERM;
 	}
-	sb->s_imount=dir_i;
-	dir_i->i_mount=1;
+	sb->s_imount=dir_i; // 设置挂载点为dir
+	dir_i->i_mount=1; // dir设置挂载标志
 	dir_i->i_dirt=1;		/* NOTE! we don't iput(dir_i) */
 	return 0;			/* we do that in umount */
 }
-
+// 挂载根节点
 void mount_root(void)
 {
 	int i,free;
@@ -257,14 +259,14 @@ void mount_root(void)
 		p->s_lock = 0;
 		p->s_wait = NULL;
 	}
-	if (!(p=read_super(ROOT_DEV)))
+	if (!(p=read_super(ROOT_DEV))) // 读取设备
 		panic("Unable to mount root");
 	if (!(mi=iget(ROOT_DEV,ROOT_INO)))
 		panic("Unable to read root i-node");
 	mi->i_count += 3 ;	/* NOTE! it is logically used 4 times, not 1 */
 	p->s_isup = p->s_imount = mi;
 	current->pwd = mi;
-	current->root = mi;
+	current->root = mi;  // 没有挂载动作，只是将当前的root设置为根节点
 	free=0;
 	i=p->s_nzones;
 	while (-- i >= 0)

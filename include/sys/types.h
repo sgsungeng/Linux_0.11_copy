@@ -35,12 +35,12 @@ typedef unsigned short ushort;
 
 typedef struct { int quot,rem; } div_t;
 typedef struct { long quot,rem; } ldiv_t;
-
+// 文件系统参数结构
 struct ustat {
-	daddr_t f_tfree;
-	ino_t f_tinode;
-	char f_fname[6];
-	char f_fpack[6];
+	daddr_t f_tfree; // 系统总空闲块数
+	ino_t f_tinode; // 总空闲i节点数
+	char f_fname[6]; // 文件系统名称
+	char f_fpack[6]; // 文件系统压缩名称
 };
 
 #define BMB asm volatile("chgw %bx, %bx")

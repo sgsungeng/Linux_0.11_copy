@@ -22,6 +22,7 @@ extern int file_read(struct m_inode * inode, struct file * filp,
 extern int file_write(struct m_inode * inode, struct file * filp,
 		char * buf, int count);
 
+// 文件操作 设置f_pos
 int sys_lseek(unsigned int fd,off_t offset, int origin)
 {
 	struct file * file;
@@ -51,7 +52,7 @@ int sys_lseek(unsigned int fd,off_t offset, int origin)
 	}
 	return file->f_pos;
 }
-
+// 文件读
 int sys_read(unsigned int fd,char * buf,int count)
 {
 	struct file * file;
@@ -63,7 +64,7 @@ int sys_read(unsigned int fd,char * buf,int count)
 		return 0;
 	verify_area(buf,count);
 	inode = file->f_inode;
-	if (inode->i_pipe)
+	if (inode->i_pipe) // 转到对应的取处理
 		return (file->f_mode&1)?read_pipe(inode,buf,count):-EIO;
 	if (S_ISCHR(inode->i_mode))
 		return rw_char(READ,inode->i_zone[0],buf,count,&file->f_pos);
@@ -79,7 +80,7 @@ int sys_read(unsigned int fd,char * buf,int count)
 	printk("(Read)inode->i_mode=%06o\n\r",inode->i_mode);
 	return -EINVAL;
 }
-
+// 文件写
 int sys_write(unsigned int fd,char * buf,int count)
 {
 	struct file * file;
@@ -90,7 +91,7 @@ int sys_write(unsigned int fd,char * buf,int count)
 	if (!count)
 		return 0;
 	inode=file->f_inode;
-	if (inode->i_pipe)
+	if (inode->i_pipe) // 转到对应的取处理
 		return (file->f_mode&2)?write_pipe(inode,buf,count):-EIO;
 	if (S_ISCHR(inode->i_mode))
 		return rw_char(WRITE,inode->i_zone[0],buf,count,&file->f_pos);

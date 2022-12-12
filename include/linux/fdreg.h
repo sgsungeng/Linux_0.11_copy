@@ -1,4 +1,4 @@
-/*
+/* // 软盘相关，不管
  * This file contains some defines for the floppy disk controller.
  * Various sources. Mostly "IBM Microcomputers: A Programmers
  * Handbook", Sanches and Canton.

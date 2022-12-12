@@ -26,7 +26,7 @@ int printk(const char *fmt, ...)
 	va_start(args, fmt);
 	i=vsprintf(buf,fmt,args);
 	va_end(args);
-	__asm__("push %%fs\n\t" // 直接写入
+	__asm__("push %%fs\n\t" // 直接写入到缓冲区，回造成异常
 		"push %%ds\n\t"
 		"pop %%fs\n\t"
 		"pushl %0\n\t"

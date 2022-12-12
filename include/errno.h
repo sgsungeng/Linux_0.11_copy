@@ -15,12 +15,12 @@
  */
 
 extern int errno;
-
-#define ERROR		99
-#define EPERM		 1
-#define ENOENT		 2
-#define ESRCH		 3
-#define EINTR		 4
+// 错误定义
+#define ERROR		99 // 一般错误
+#define EPERM		 1 // 操作没有许可
+#define ENOENT		 2 // 文件或者目录不存在
+#define ESRCH		 3 // 进程不存在
+#define EINTR		 4 // 中断的系统调用
 #define EIO		 5
 #define ENXIO		 6
 #define E2BIG		 7

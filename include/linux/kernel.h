@@ -1,7 +1,7 @@
 /*
  * 'kernel.h' contains some often-used function prototypes etc
  */
-void verify_area(void * addr,int count);
+void verify_area(void * addr,int count); // 内核态没有缺页中断，需要用这个检查
 void panic(const char * str);
 int printf(const char * fmt, ...);
 int printk(const char * fmt, ...);

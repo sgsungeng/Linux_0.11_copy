@@ -15,7 +15,7 @@
 /* we use this so that we can do without the ctype library */
 #define is_digit(c)	((c) >= '0' && (c) <= '9')
 
-static int skip_atoi(const char **s)
+static int skip_atoi(const char **s) // 读取数字
 {
 	int i=0;
 
@@ -32,11 +32,11 @@ static int skip_atoi(const char **s)
 #define SPECIAL	32		/* 0x */
 #define SMALL	64		/* use 'abcdef' instead of 'ABCDEF' */
 
-#define do_div(n,base) ({ \
+#define do_div(n,base) ({ \ // 除法 
 int __res; \
 __asm__("divl %4":"=a" (n),"=d" (__res):"0" (n),"1" (0),"r" (base)); \
 __res; })
-
+// 数字转换
 static char * number(char * str, int num, int base, int size, int precision
 	,int type)
 {
@@ -90,7 +90,7 @@ static char * number(char * str, int num, int base, int size, int precision
 		*str++ = ' ';
 	return str;
 }
-
+// 处理占位符号，将占位符号转换为字符串
 int vsprintf(char *buf, const char *fmt, va_list args)
 {
 	int len;

@@ -30,17 +30,17 @@
 
 void do_exit(long code);
 
-static inline void oom(void)
+static inline void oom(void) // out of memory
 {
 	printk("out of memory\n\r");
 	do_exit(SIGSEGV);
 }
 
-#define invalidate() \
+#define invalidate() \ // 让当前tlb不可用
 __asm__("movl %%eax,%%cr3"::"a" (0)) // write cr3 as 0 for clear TLB
 
 /* these are not to be changed without changing head.s etc */
-#define LOW_MEM 0x100000
+#define LOW_MEM 0x100000 // 主内存开始位置
 #define PAGING_MEMORY (15*1024*1024)
 #define PAGING_PAGES (PAGING_MEMORY>>12)
 #define MAP_NR(addr) (((addr)-LOW_MEM)>>12)
@@ -51,7 +51,7 @@ current->start_code + current->end_code)
 
 static long HIGH_MEMORY = 0;
 
-#define copy_page(from,to) \
+#define copy_page(from,to) \ //拷贝页面，
 __asm__("cld ; rep ; movsl"::"S" (from),"D" (to),"c" (1024))
 
 static unsigned char mem_map [ PAGING_PAGES ] = {0,}; // (15 * 1024 * 1024) >> 12 = 3840
@@ -60,7 +60,7 @@ static unsigned char mem_map [ PAGING_PAGES ] = {0,}; // (15 * 1024 * 1024) >> 1
  * Get physical address of first (actually last :-) free page, and mark it
  * used. If no free pages left, return 0.
  */
-unsigned long get_free_page(void) // find a free page from mem_map
+unsigned long get_free_page(void) // find a free page from mem_map ，在mem_map中找到 一个为0的bit
 {
 register unsigned long __res asm("ax");
 
@@ -86,22 +86,22 @@ return __res;
  * Free a page of memory at physical address 'addr'. Used by
  * 'free_page_tables()'
  */
-void free_page(unsigned long addr)
+void free_page(unsigned long addr) // 释放物理内存
 {
 	if (addr < LOW_MEM) return;
 	if (addr >= HIGH_MEMORY)
 		panic("trying to free nonexistent page");
 	addr -= LOW_MEM;
-	addr >>= 12;
+	addr >>= 12;// 获取的页号
 	if (mem_map[addr]--) return;
-	mem_map[addr]=0;
+	mem_map[addr]=0; //置位0
 	panic("trying to free free page");
 }
 
 /*
  * This function frees a continuos block of page tables, as needed
  * by 'exit()'. As does copy_page_tables(), this handles only 4Mb blocks.
- */
+ */ // 直接释放4个page table
 int free_page_tables(unsigned long from,unsigned long size)
 {
 	unsigned long *pg_table;
@@ -118,12 +118,12 @@ int free_page_tables(unsigned long from,unsigned long size)
 			continue;
 		pg_table = (unsigned long *) (0xfffff000 & *dir);
 		for (nr=0 ; nr<1024 ; nr++) {
-			if (1 & *pg_table)
+			if (1 & *pg_table) //释放页面
 				free_page(0xfffff000 & *pg_table);
 			*pg_table = 0;
 			pg_table++;
 		}
-		free_page(0xfffff000 & *dir);
+		free_page(0xfffff000 & *dir); //自己这个二级页面
 		*dir = 0;
 	}
 	invalidate();
@@ -146,7 +146,7 @@ int free_page_tables(unsigned long from,unsigned long size)
  * doesn't take any more memory - we don't copy-on-write in the low
  * 1 Mb-range, so the pages can be shared with the kernel. Thus the
  * special case for nr=xxxx.
- */
+ */ // 拷贝页表，当前只是拷贝了引用，写时复制
 int copy_page_tables(unsigned long from,unsigned long to,long size)
 {
 	unsigned long * from_page_table;
@@ -176,11 +176,11 @@ int copy_page_tables(unsigned long from,unsigned long to,long size)
 		// 9-11 avilabel for system programmer's use
 		// 12-31 page base Address（20 bit）
 		if (1 & *to_dir) // present ， if *to_dir & 1 == 1 this page(directory page) is present
-			panic("copy_page_tables: already exist");
-		if (!(1 & *from_dir))
+			panic("copy_page_tables: already exist");// to_dir 如果present就是有问题
+		if (!(1 & *from_dir)) // from_dir 如果无效就不需要拷贝
 			continue; // this directory is not present
 		from_page_table = (unsigned long *) (0xfffff000 & *from_dir); // read page table
-		if (!(to_page_table = (unsigned long *) get_free_page()))
+		if (!(to_page_table = (unsigned long *) get_free_page())) // 获得一页来保存 页表
 			return -1;	/* Out of memory, see freeing */
 		*to_dir = ((unsigned long) to_page_table) | 7; // addr | present | write | user
 		nr = (from==0)?0xA0:1024; // if copy from super, copying 160 page 
@@ -189,7 +189,7 @@ int copy_page_tables(unsigned long from,unsigned long to,long size)
 			if (!(1 & this_page))
 				continue;
 			this_page &= ~2; // set this page as read only
-			*to_page_table = this_page;
+			*to_page_table = this_page; // 直接赋值，
 			if (this_page > LOW_MEM) {
 				*from_page_table = this_page; // set this page as readonly
 				this_page -= LOW_MEM;
@@ -207,7 +207,7 @@ int copy_page_tables(unsigned long from,unsigned long to,long size)
  * It returns the physical address of the page gotten, 0 if
  * out of memory (either when trying to access page-table or
  * page.)
- */
+ */ // 将物理地址绑定到虚拟地址address
 unsigned long put_page(unsigned long page,unsigned long address)
 {
 	unsigned long tmp, *page_table;
@@ -227,28 +227,28 @@ unsigned long put_page(unsigned long page,unsigned long address)
 		*page_table = tmp|7;
 		page_table = (unsigned long *) tmp;
 	}
-	page_table[(address>>12) & 0x3ff] = page | 7;
+	page_table[(address>>12) & 0x3ff] = page | 7; // 绑定
 /* no need for invalidate */
 	return page;
 }
-
+// 取消写保护，写时复制
 void un_wp_page(unsigned long * table_entry)
 {
 	unsigned long old_page,new_page;
 
-	old_page = 0xfffff000 & *table_entry;
-	if (old_page >= LOW_MEM && mem_map[MAP_NR(old_page)]==1) {
+	old_page = 0xfffff000 & *table_entry; // 获取老的物理地址
+	if (old_page >= LOW_MEM && mem_map[MAP_NR(old_page)]==1) { // 如果只有一个进程使用，直接改为可写
 		*table_entry |= 2;
 		invalidate();
 		return;
 	}
-	if (!(new_page=get_free_page()))
+	if (!(new_page=get_free_page())) // 申请一页新的
 		oom();
 	if (old_page >= LOW_MEM)
 		mem_map[MAP_NR(old_page)]--;
-	*table_entry = new_page | 7;
+	*table_entry = new_page | 7; // 设置新的物理地址
 	invalidate();
-	copy_page(old_page,new_page);
+	copy_page(old_page,new_page); // 拷贝页面
 }	
 
 /*
@@ -257,7 +257,7 @@ void un_wp_page(unsigned long * table_entry)
  * and decrementing the shared-page counter for the old page.
  *
  * If it's in code space we exit with a segment error.
- */
+ */ //处理页保护异常
 void do_wp_page(unsigned long error_code,unsigned long address)
 {
 #if 0
@@ -272,6 +272,7 @@ void do_wp_page(unsigned long error_code,unsigned long address)
 
 }
 
+// 内核态没有缺页中断，因此手动验证，如果需要就再申请一个
 void write_verify(unsigned long address)
 {
 	unsigned long page;
@@ -285,6 +286,7 @@ void write_verify(unsigned long address)
 	return;
 }
 
+// 获取的物理地址并与address 绑定
 void get_empty_page(unsigned long address)
 {
 	unsigned long tmp;
@@ -338,8 +340,8 @@ static int try_to_share(unsigned long address, struct task_struct * p)
 	if (1 & *(unsigned long *) to_page)
 		panic("try_to_share: to_page already exists");
 /* share them: write-protect */
-	*(unsigned long *) from_page &= ~2;
-	*(unsigned long *) to_page = *(unsigned long *) from_page;
+	*(unsigned long *) from_page &= ~2; //设置为不可写
+	*(unsigned long *) to_page = *(unsigned long *) from_page; // 设置物理页面相同 
 	invalidate();
 	phys_addr -= LOW_MEM;
 	phys_addr >>= 12;
@@ -363,7 +365,7 @@ static int share_page(unsigned long address)
 		return 0;
 	if (current->executable->i_count < 2)// the file is used by only current task
 		return 0;
-	for (p = &LAST_TASK ; p > &FIRST_TASK ; --p) {
+	for (p = &LAST_TASK ; p > &FIRST_TASK ; --p) { // 找到之前有的相同的executable的
 		if (!*p)
 			continue;
 		if (current == *p)
@@ -376,6 +378,8 @@ static int share_page(unsigned long address)
 	return 0;
 }
 
+
+// 执行缺页处理
 void do_no_page(unsigned long error_code,unsigned long address)
 {
 	int nr[4];
@@ -399,7 +403,7 @@ void do_no_page(unsigned long error_code,unsigned long address)
 	block = 1 + tmp/BLOCK_SIZE;
 	for (i=0 ; i<4 ; block++,i++)
 		nr[i] = bmap(current->executable,block);
-	bread_page(page,current->executable->i_dev,nr);
+	bread_page(page,current->executable->i_dev,nr); // 读取执行体
 	i = tmp + 4096 - current->end_data;
 	tmp = page + 4096;
 	while (i-- > 0) {
@@ -411,6 +415,7 @@ void do_no_page(unsigned long error_code,unsigned long address)
 	free_page(page);
 	oom();
 }
+// 将缓存设置为已经使用，将主内存设置为未使用
 void mem_init(long start_mem, long end_mem)
 {
 	int i;

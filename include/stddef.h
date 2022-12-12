@@ -13,7 +13,7 @@ typedef unsigned long size_t;
 
 #undef NULL
 #define NULL ((void *)0)
-
+// 获取member在type中的偏移
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 
 #endif

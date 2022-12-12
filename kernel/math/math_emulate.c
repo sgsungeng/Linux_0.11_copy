@@ -20,7 +20,7 @@ void math_emulate(long edi, long esi, long ebp, long sys_call_ret,
 	unsigned short fs,unsigned short es,unsigned short ds,
 	unsigned long eip,unsigned short cs,unsigned long eflags,
 	unsigned short ss, unsigned long esp)
-{
+{// 协处理器模拟，没有实现
 	unsigned char first, second;
 
 /* 0x0007 means user code space */

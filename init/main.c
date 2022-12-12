@@ -148,7 +148,7 @@ void main(void)		/* This really IS void, no error here. */
  * can run). For task0 'pause()' just means we go check if some other
  * task can run, and if not we return here.
  */
-	for(;;) pause();
+	for(;;) pause(); // idle 进程 ==========
 }
 
 static int printf(const char *fmt, ...)

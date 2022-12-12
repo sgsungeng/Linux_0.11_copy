@@ -15,7 +15,7 @@
 
 void sys_sync(void);	/* it's really int */
 
-void panic(const char * s)
+void panic(const char * s) // panic
 {
 	printk("Kernel panic: %s\n\r",s);
 	if (current == task[0])

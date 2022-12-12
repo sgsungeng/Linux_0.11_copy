@@ -2,10 +2,10 @@
 #include <errno.h>
 #include <asm/segment.h>
 
-char msg[24]; //最多23个字符，外带一个回车符号
+char msg[24]; //最多23个字符，外带一个回车符号，最简单的系统调用
 
 int 
-sys_iam(const char* name)
+sys_iam(const char* name) // 设置名字
 {
 	int len = 0;
 	int tmp[30];
@@ -30,7 +30,7 @@ sys_iam(const char* name)
 }
 
 int
-sys_whoami(char* name,unsigned int size)
+sys_whoami(char* name,unsigned int size) // 返回名字
 {
 	int len = 0;
 	int i = 0;

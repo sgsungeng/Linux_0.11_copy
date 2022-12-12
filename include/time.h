@@ -14,7 +14,7 @@ typedef unsigned int size_t;
 #define CLOCKS_PER_SEC 100
 
 typedef long clock_t;
-
+// 时间处理
 struct tm {
 	int tm_sec;
 	int tm_min;

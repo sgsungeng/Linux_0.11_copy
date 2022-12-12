@@ -26,7 +26,7 @@ static ioctl_ptr ioctl_table[]={
 	NULL,		/* /dev/lp */
 	NULL};		/* named pipes */
 	
-
+// 只是操作了tty
 int sys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
 {	
 	struct file * filp;
