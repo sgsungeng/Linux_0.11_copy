@@ -396,7 +396,7 @@ idt_descr:
 
 ```s
 setup_gdt:
-	lgdt gdt_descr
+	lgdt gdt_descr，# 将描述符放入GDTR 寄存器中
 	ret
 
 gdt:	.quad 0x0000000000000000	/* NULL descriptor */
